@@ -1,4 +1,11 @@
-const s3 = require("../utils/awsConfig"); // I
+const {
+  S3Client,
+  PutObjectCommand,
+  ListObjectsV2Command,
+  GetObjectCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const s3Client = require("../utils/awsConfig");
 
 // Route for uploading files
 exports.uploadS3 = async (req, res) => {
@@ -6,26 +13,34 @@ exports.uploadS3 = async (req, res) => {
   console.log(profileName);
   const files = req.files;
   const rootFolder = "Resume";
+
   if (!profileName || !files) {
     return res
       .status(400)
       .json({ error: "Profile name and file are required" });
   }
 
-  // const fileName = `${profileName}/${files.originalname}`; // File path in S3
-
   try {
     const uploadPromises = files.map(async (file) => {
       const fileKey = `${rootFolder}/${profileName}/${file.originalname}`;
-      const uploadParams = {
+
+      const uploadParams = new PutObjectCommand({
         Bucket: "texora",
         Key: fileKey,
         Body: file.buffer,
-      };
+      });
 
-      const result = await s3.upload(uploadParams).promise();
-      return { fileName: file.originalname, result };
+      const result = await s3Client.send(uploadParams);
+      return {
+        fileName: file.originalname,
+        result: {
+          Location: `https://texora.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`,
+          Key: fileKey,
+          Bucket: "texora",
+        },
+      };
     });
+
     const uploadResults = await Promise.all(uploadPromises);
     res
       .status(200)
@@ -35,18 +50,23 @@ exports.uploadS3 = async (req, res) => {
     res.status(500).json({ error: "Failed to upload file" });
   }
 };
+
 exports.subFolder = async (req, res) => {
-  const params = {
+  const params = new ListObjectsV2Command({
     Bucket: "texora",
     Prefix: "Resume/",
     Delimiter: "/", // Ensures we get subfolders
-  };
+  });
 
   try {
-    const data = await s3.listObjectsV2(params).promise();
-    const subfolders = data.CommonPrefixes.map((prefix) =>
-      prefix.Prefix.replace("Resume/", "").replace("/", "")
-    );
+    const data = await s3Client.send(params);
+    // Check if CommonPrefixes exists before mapping
+    const subfolders = data.CommonPrefixes
+      ? data.CommonPrefixes.map((prefix) =>
+          prefix.Prefix.replace("Resume/", "").replace("/", "")
+        )
+      : [];
+
     res.json({ subfolders });
   } catch (error) {
     console.error("Error fetching subfolders:", error);
@@ -62,16 +82,20 @@ exports.getFolder = async (req, res) => {
     return res.status(400).send("Subfolder is required");
   }
 
-  const params = {
+  const params = new ListObjectsV2Command({
     Bucket: "texora",
     Prefix: `Resume/${subfolder}/`,
-  };
+  });
 
   try {
-    const data = await s3.listObjectsV2(params).promise();
-    const files = data.Contents.map((item) =>
-      item.Key.replace(`Resume/${subfolder}/`, "")
-    );
+    const data = await s3Client.send(params);
+    // Check if Contents exists before mapping
+    const files = data.Contents
+      ? data.Contents.map((item) =>
+          item.Key.replace(`Resume/${subfolder}/`, "")
+        )
+      : [];
+
     res.json({ files });
   } catch (error) {
     console.error("Error fetching files:", error);
@@ -87,43 +111,36 @@ exports.downloadFile = async (req, res) => {
     return res.status(400).send("File key is required");
   }
 
-  const params = {
+  const command = new GetObjectCommand({
     Bucket: "texora",
     Key: fileKey,
-    Expires: 60, // URL valid for 60 seconds
-  };
+  });
 
   try {
-    const url = await s3.getSignedUrlPromise("getObject", params);
+    // URL valid for 60 seconds
+    const url = await getSignedUrl(s3Client, command, { expiresIn: 60 });
     res.json({ url });
   } catch (error) {
     console.error("Error generating signed URL:", error);
     res.status(500).send("Error generating download URL");
   }
 };
-// const listObjects = async (Bucket, Prefix = "") => {
-//   const params = {
-//     Bucket,
-//     Prefix,
-//   };
-//   console.log("S3 Parameters:", params);
-//   const data = await s3.listObjectsV2(params).promise();
-//   console.log(data);
-//   return data.Contents.map((item) => item.Key);
-// };
+
 const listObjectsRecursively = async (Bucket) => {
   let allKeys = [];
-  let ContinuationToken = null;
+  let ContinuationToken = undefined;
 
   do {
-    const params = {
+    const params = new ListObjectsV2Command({
       Bucket,
       ContinuationToken,
-    };
+    });
 
     try {
-      const data = await s3.listObjectsV2(params).promise();
-      allKeys = allKeys.concat(data.Contents.map((item) => item.Key));
+      const data = await s3Client.send(params);
+      if (data.Contents) {
+        allKeys = allKeys.concat(data.Contents.map((item) => item.Key));
+      }
       ContinuationToken = data.NextContinuationToken; // Check if more objects exist
     } catch (error) {
       console.error("Error fetching objects:", error);
@@ -133,42 +150,3 @@ const listObjectsRecursively = async (Bucket) => {
 
   return allKeys;
 };
-
-// Call the function
-// const files = listObjectsRecursively("texora", "resume/");
-// console.log("Files:", files);
-
-// Route to fetch all folders and files
-// exports.getFolder = (async (req, res) => {
-//   try {
-//     const bucketName = "texora"; // Your bucket name
-//     const folderPath = "resume/"; // Root folder path
-
-//     const files = await listObjectsRecursively(bucketName, folderPath);
-//     res.json({ files });
-//     console.log(files);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send("Error fetching files");
-//   }
-// });
-
-// // Route to download a file
-// exports.downloadFile =(async (req, res) => {
-//   try {
-//     const bucketName = "texora"
-//     const fileKey = req.query.key; // Get the file key from query params
-
-//     const params = {
-//       Bucket: bucketName,
-//       Key: fileKey,
-//     };
-
-//     const fileStream = s3.getObject(params).createReadStream();
-//     res.attachment(fileKey);
-//     fileStream.pipe(res);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send("Error downloading file");
-//   }
-// });

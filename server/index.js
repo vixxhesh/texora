@@ -6,9 +6,10 @@ const authRoute = require("./router/authRoute");
 const adminRoutes = require("./router/adminRoute");
 
 // const userRoute = require('./router/userRoute');
-const s3Routs = require('./router/awsS3Routes');
+const s3Routs = require("./router/awsS3Routes");
 const userRoute = require("./router/userRoute");
 // console.log(jdRoute);
+const path = require("path");
 
 const bodyParser = require("body-parser");
 
@@ -39,6 +40,9 @@ const { connectDB } = require("./utils/db"); // Import connectDB function
 
 const app = express();
 const port = process.env.SERVER_PORT || 8080;
+const _dirname = path.resolve();
+const buildpath = path.join(_dirname, "../client/dist");
+app.use(express.static(buildpath));
 
 // Middleware
 app.use(cors());
@@ -47,13 +51,18 @@ app.use(cors());
 // app.use("/admin", adminRoutes);
 // app.use('/update',userRoute);
 // app.listen(port, () => {
-//   console.log(`server is running on port:${port}`);
+//   console.log(server is running on port:${port});
 // });
 // =======
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 // Connect to MongoDB and start the server
 const startServer = async () => {
   await connectDB(); // Ensure connection is established
@@ -62,8 +71,8 @@ const startServer = async () => {
   app.use("/app", authRoute);
   app.use("/admin", adminRoutes);
   // app.use("/api/jd", jdRoute);
-  app.use('/api/zoom',meetingRoutes);
-  app.use('/api',s3Routs)
+  app.use("/api/zoom", meetingRoutes);
+  app.use("/api", s3Routs);
   app.use("/update", userRoute);
   // app.use("/api/jd", jdRoute);
   app.use("/api/zoom", meetingRoutes);
@@ -90,7 +99,9 @@ const startServer = async () => {
   //     res.status(404).json({ error: "File not found" });
   //   }
   // });
-
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(buildpath, "index.html"));
+  });
   app.listen(port, () => {
     console.log(`Server is running on port:${port}`);
   });

@@ -1,4 +1,13 @@
-const s3 = require("../utils/s3");
+const {
+  S3Client,
+  PutObjectCommand,
+  ListObjectsV2Command,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { Readable } = require("stream");
+const s3Client = require("../utils/awsConfig"); // Make sure this points to your v3 S3Client
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || "texora";
 const FOLDER_NAME = "interview-videos";
@@ -23,76 +32,107 @@ exports.uploadVideo = async (req, res) => {
       .json({ message: "Invalid file type. Only MP4 is allowed." });
   }
 
-  const params = {
+  const command = new PutObjectCommand({
     Bucket: BUCKET_NAME,
     Key: `${FOLDER_NAME}/${name}.mp4`,
     Body: req.file.buffer,
     ContentType: req.file.mimetype,
-  };
+  });
 
   try {
-    await s3.upload(params).promise();
-    res.status(200).json({ message: "Video uploaded successfully." });
+    console.log("Attempting to upload video to S3:", {
+      Bucket: BUCKET_NAME,
+      Key: `${FOLDER_NAME}/${name}.mp4`,
+      ContentType: req.file.mimetype,
+      FileSize: req.file.size,
+    });
+
+    const result = await s3Client.send(command);
+    console.log("Video upload successful:", result);
+
+    res.status(200).json({
+      message: "Video uploaded successfully.",
+      key: `${FOLDER_NAME}/${name}.mp4`,
+    });
   } catch (error) {
-    winston.error("S3 Upload Error:", { error, params });
-    res.status(500).json({ message: "Failed to upload video." });
+    console.error("S3 Upload Error:", error);
+    res.status(500).json({
+      message: "Failed to upload video.",
+      error: error.message,
+    });
   }
 };
 
 // List all videos in S3
 exports.listVideos = async (req, res) => {
   try {
-    const params = { Bucket: BUCKET_NAME, Prefix: `${FOLDER_NAME}/` };
-    const data = await s3.listObjectsV2(params).promise();
+    const command = new ListObjectsV2Command({
+      Bucket: BUCKET_NAME,
+      Prefix: `${FOLDER_NAME}/`,
+    });
 
-    const videos = data.Contents.map((item) => ({
-      key: item.Key,
-      name: item.Key.replace(`${FOLDER_NAME}/`, ""),
-      lastModified: item.LastModified,
-      size: item.Size,
-    }));
+    const data = await s3Client.send(command);
+
+    // Check if Contents exists before mapping
+    const videos = data.Contents
+      ? data.Contents.map((item) => ({
+          key: item.Key,
+          name: item.Key.replace(`${FOLDER_NAME}/`, ""),
+          lastModified: item.LastModified,
+          size: item.Size,
+        }))
+      : [];
 
     res.status(200).json(videos);
   } catch (error) {
-    winston.error("S3 List Error:", { error });
+    console.error("S3 List Error:", error);
     res.status(500).json({ message: "Failed to fetch video list." });
   }
 };
 
-// Stream video for download
-
+// Normalize key helper function
 const normalizeKey = (key) => {
-  key.startsWith(FOLDER_NAME) ? key : `${FOLDER_NAME}/${key}`;
+  return key.startsWith(FOLDER_NAME) ? key : `${FOLDER_NAME}/${key}`;
 };
-
-// Utility to validate video key
-// const isValidKey = (key) => {
-//   const regex = /^[a-zA-Z0-9_\-\/]+\.mp4$/; // Allow alphanumeric, hyphen, underscore, and folder structure with `.mp4`
-//   return regex.test(key);
-// };
 
 // Download video
 exports.downloadVideo = async (req, res) => {
-  const { key } = req.params;
+  const { key } = req.query; // Changed from req.params to req.query based on your route
+
+  if (!key) {
+    return res.status(400).json({ message: "Video key is required." });
+  }
+
   const normalizedKey = normalizeKey(key.endsWith(".mp4") ? key : `${key}.mp4`);
 
   if (!isValidKey(normalizedKey)) {
     return res.status(400).json({ message: "Invalid video key format." });
   }
 
-  const params = { Bucket: BUCKET_NAME, Key: normalizedKey };
+  const command = new GetObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: normalizedKey,
+  });
 
   try {
-    const stream = s3.getObject(params).createReadStream();
-    res.setHeader("Content-Type", "video/mp4");
+    const { Body, ContentType } = await s3Client.send(command);
+
+    res.setHeader("Content-Type", ContentType || "video/mp4");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${key.replace(FOLDER_NAME + "/", "")}"`
+      `attachment; filename="${normalizedKey.split("/").pop()}"`
     );
-    stream.pipe(res);
+
+    // AWS SDK v3 returns a readable stream
+    if (Body instanceof Readable) {
+      Body.pipe(res);
+    } else {
+      // If Body is not already a stream (e.g., if it's a buffer)
+      Readable.from(Body).pipe(res);
+    }
   } catch (error) {
-    winston.error("S3 Download Error:", { error, key: normalizedKey });
-    if (error.code === "NoSuchKey") {
+    console.error("S3 Download Error:", error);
+    if (error.name === "NoSuchKey") {
       return res.status(404).json({ message: "Video not found in storage." });
     }
     res
@@ -103,21 +143,29 @@ exports.downloadVideo = async (req, res) => {
 
 // Delete video
 exports.deleteVideo = async (req, res) => {
-  const { key } = req.params;
+  const { key } = req.query; // Changed from req.params to req.query based on your route
+
+  if (!key) {
+    return res.status(400).json({ message: "Video key is required." });
+  }
+
   const normalizedKey = normalizeKey(key.endsWith(".mp4") ? key : `${key}.mp4`);
 
   if (!isValidKey(normalizedKey)) {
     return res.status(400).json({ message: "Invalid video key format." });
   }
 
-  const params = { Bucket: BUCKET_NAME, Key: normalizedKey };
+  const command = new DeleteObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: normalizedKey,
+  });
 
   try {
-    await s3.deleteObject(params).promise();
+    await s3Client.send(command);
     res.status(200).json({ message: "Video deleted successfully." });
   } catch (error) {
-    winston.error("S3 Delete Error:", { error, key: normalizedKey });
-    if (error.code === "NoSuchKey") {
+    console.error("S3 Delete Error:", error);
+    if (error.name === "NoSuchKey") {
       return res.status(404).json({ message: "Video not found in storage." });
     }
     res
