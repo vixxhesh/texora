@@ -7,7 +7,7 @@ const Login = ({ onLogin }) => {
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState(localStorage.getItemQ("role") || "");
+  const [role, setRole] = useState(localStorage.getItem("role") || "");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,7 +23,7 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        `${process.env.REACT_APP_API_BASE_URL}/app/login`,
+        `${import.meta.env.VITE_API_BASE_URL}/app/login`,
         loginData
       );
       // <<<<<<< pranav2
