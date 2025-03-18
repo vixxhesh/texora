@@ -12,7 +12,7 @@ const ListIntVid = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "http://localhost:8080/api/interview-videos"
+        `${import.meta.env.VITE_API_BASE_URL}/api/interview-videos`
       );
       setVideos(response.data);
       setMessage("");
@@ -30,7 +30,9 @@ const ListIntVid = () => {
     try {
       const videoKey = key.endsWith(".mp4") ? key : `${key}.mp4`;
       await axios.delete(
-        `http://localhost:8080/api/interview-videos/delete?filekey=${videoKey}`
+        `${
+          import.meta.env.VITE_API_BASE_URL
+        }/api/interview-videos/delete?filekey=${videoKey}`
       );
       alert("Video deleted successfully.");
     } catch (error) {
@@ -47,7 +49,9 @@ const ListIntVid = () => {
     try {
       const videoKey = filename.endsWith(".mp4") ? filename : `${filename}.mp4`;
       const response = await axios.get(
-        `http://localhost:8080/api/interview-videos/download/${videoKey}`,
+        `${
+          import.meta.env.VITE_API_BASE_URL
+        }/api/interview-videos/download/${videoKey}`,
         { responseType: "blob" }
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));

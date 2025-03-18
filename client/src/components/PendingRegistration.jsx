@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import Layout from './Layout';
-import { User, Mail, Phone, Check, X, Copy, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import Layout from "./Layout";
+import { User, Mail, Phone, Check, X, Copy, AlertCircle } from "lucide-react";
 
 const PendingRegistrations = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [role, setRole] = useState('user');
-  const [generatedPassword, setGeneratedPassword] = useState('');
-  const [error, setError] = useState('');
+  const [role, setRole] = useState("user");
+  const [generatedPassword, setGeneratedPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
 
@@ -19,10 +19,12 @@ const PendingRegistrations = () => {
   const fetchPendingUsers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:8080/admin/pending-users');
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/admin/pending-users`
+      );
       setPendingUsers(res.data);
     } catch (error) {
-      setError('Failed to fetch pending users');
+      setError("Failed to fetch pending users");
       console.error(error);
     } finally {
       setLoading(false);
@@ -31,30 +33,40 @@ const PendingRegistrations = () => {
 
   const handleApprove = async () => {
     try {
-      const res = await axios.post('http://localhost:8080/admin/approve-users', {
-        userId: selectedUser._id,
-        role,
-      });
-      
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/admin/approve-users`,
+        {
+          userId: selectedUser._id,
+          role,
+        }
+      );
+
       setGeneratedPassword(res.data.password);
-      setPendingUsers(pendingUsers.filter(user => user._id !== selectedUser._id));
-      
+      setPendingUsers(
+        pendingUsers.filter((user) => user._id !== selectedUser._id)
+      );
+
       // Don't close modal yet - show the generated password
     } catch (error) {
-      setError('Failed to approve user');
+      setError("Failed to approve user");
       console.error(error);
     }
   };
 
   const handleReject = async () => {
     try {
-      await axios.post('http://localhost:8080/admin/reject-user', {
-        userId: selectedUser._id,
-      });
-      setPendingUsers(pendingUsers.filter(user => user._id !== selectedUser._id));
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/admin/reject-user`,
+        {
+          userId: selectedUser._id,
+        }
+      );
+      setPendingUsers(
+        pendingUsers.filter((user) => user._id !== selectedUser._id)
+      );
       setSelectedUser(null);
     } catch (error) {
-      setError('Failed to reject user');
+      setError("Failed to reject user");
       console.error(error);
     }
   };
@@ -65,7 +77,7 @@ const PendingRegistrations = () => {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
-      setError('Failed to copy to clipboard');
+      setError("Failed to copy to clipboard");
     }
   };
 
@@ -73,8 +85,12 @@ const PendingRegistrations = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Pending Registrations</h1>
-          <p className="text-gray-400 mt-2">Review and manage new user requests</p>
+          <h1 className="text-2xl font-bold text-white">
+            Pending Registrations
+          </h1>
+          <p className="text-gray-400 mt-2">
+            Review and manage new user requests
+          </p>
         </div>
 
         {error && (
@@ -187,9 +203,13 @@ const PendingRegistrations = () => {
 
                 {generatedPassword && (
                   <div className="mt-4 p-4 bg-gray-700 rounded-lg">
-                    <p className="text-gray-300 text-sm mb-2">Generated Password:</p>
+                    <p className="text-gray-300 text-sm mb-2">
+                      Generated Password:
+                    </p>
                     <div className="flex items-center justify-between bg-gray-600 px-3 py-2 rounded">
-                      <code className="text-green-400">{generatedPassword}</code>
+                      <code className="text-green-400">
+                        {generatedPassword}
+                      </code>
                       <button
                         onClick={copyToClipboard}
                         className="ml-2 text-gray-400 hover:text-white"
@@ -226,7 +246,7 @@ const PendingRegistrations = () => {
                   <button
                     onClick={() => {
                       setSelectedUser(null);
-                      setGeneratedPassword('');
+                      setGeneratedPassword("");
                     }}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors"
                   >

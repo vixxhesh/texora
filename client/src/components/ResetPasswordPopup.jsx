@@ -67,16 +67,6 @@
 
 // export default ResetPasswordPopup;
 
-
-
-
-
-
-
-
-
-
-
 // import React, { useState } from 'react';
 // import { Lock } from 'lucide-react'; // Importing the Lock icon for consistency with the theme
 // import { useNavigate } from "react-router-dom";
@@ -154,8 +144,6 @@
 // };
 
 // export default ResetPasswordPopup;
-
-
 
 // import React, { useState } from 'react';
 // import { Lock, Eye, EyeOff } from 'lucide-react';  // Import Eye and EyeOff icons for password visibility
@@ -251,23 +239,20 @@
 
 // export default ResetPasswordPopup;
 
-
-
-
 // ResetPasswordPopup.jsx
-import React, { useState } from 'react';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import React, { useState } from "react";
+import { Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
+import axios from "axios";
 
 const ResetPasswordPopup = ({ id, isOpen, setIsOpen }) => {
   const navigate = useNavigate();
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClose = () => {
     setIsOpen(false);
-    setPassword('');
+    setPassword("");
   };
 
   const handleSubmit = async (e) => {
@@ -277,10 +262,13 @@ const ResetPasswordPopup = ({ id, isOpen, setIsOpen }) => {
       return;
     }
     try {
-      const res = await axios.post("http://localhost:8080/update/password", { id, password });
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/update/password`,
+        { id, password }
+      );
       alert("Password reset successful.");
       handleClose();
-      navigate('/');
+      navigate("/");
     } catch (error) {
       console.error(error);
       alert("An error occurred. Please try again.");
@@ -292,15 +280,19 @@ const ResetPasswordPopup = ({ id, isOpen, setIsOpen }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-gray-800 p-8 rounded-xl max-w-sm w-full space-y-6">
-        <h2 className="text-2xl font-bold text-white text-center">Reset Password</h2>
+        <h2 className="text-2xl font-bold text-white text-center">
+          Reset Password
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center space-x-3 text-gray-300">
             <Lock className="h-5 w-5 text-gray-400" />
-            <label htmlFor="password" className="text-sm">Create New Password:</label>
+            <label htmlFor="password" className="text-sm">
+              Create New Password:
+            </label>
           </div>
           <div className="relative">
             <input
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -313,7 +305,11 @@ const ResetPasswordPopup = ({ id, isOpen, setIsOpen }) => {
               className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+              {showPassword ? (
+                <Eye className="h-5 w-5" />
+              ) : (
+                <EyeOff className="h-5 w-5" />
+              )}
             </button>
           </div>
           <div className="flex justify-between space-x-4">

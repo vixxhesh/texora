@@ -1,35 +1,42 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { User, Mail, Phone, AlertCircle } from 'lucide-react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { User, Mail, Phone, AlertCircle } from "lucide-react";
 
 const SignUp = () => {
   const [userData, setUserData] = useState({
-    name: '',
-    email: '',
-    phoneNumber: '',
+    name: "",
+    email: "",
+    phoneNumber: "",
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUserData((prev) => ({ ...prev, [name]: value }));
-    setError('');
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:8080/app/signup', userData);
-      setSuccess('Sign up request sent successfully! Admin will review your application.');
-      setError('');
-      setUserData({ name: '', email: '', phoneNumber: '' });
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/app/signup`,
+        userData
+      );
+      setSuccess(
+        "Sign up request sent successfully! Admin will review your application."
+      );
+      setError("");
+      setUserData({ name: "", email: "", phoneNumber: "" });
     } catch (error) {
-      setError(error.response?.data?.message || 'An error occurred during signup.');
-      setSuccess('');
+      setError(
+        error.response?.data?.message || "An error occurred during signup."
+      );
+      setSuccess("");
     }
   };
 
@@ -55,7 +62,6 @@ const SignUp = () => {
             {success}
           </div>
         )}
-        
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
@@ -128,16 +134,15 @@ const SignUp = () => {
           </button>
         </form>
 
-                {/* Back Button */}
-                <div className="text-center">
+        {/* Back Button */}
+        <div className="text-center">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="text-blue-600 hover:text-blue-500 text-sm font-medium"
           >
             Back to Home
           </button>
         </div>
-
       </div>
     </div>
   );

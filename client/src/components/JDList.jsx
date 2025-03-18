@@ -9,7 +9,9 @@ const JDList = () => {
   // Fetch the list of job descriptions
   const fetchJDList = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/jd/list");
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/jd/list`
+      );
       setJDList(response.data);
     } catch (error) {
       setMessage("Failed to fetch JD list.");
@@ -19,7 +21,7 @@ const JDList = () => {
   const handleDelete = async (jdId) => {
     try {
       const response = await axios.delete(
-        `http://localhost:8080/api/jd/delete/${jdId}`
+        `${import.meta.env.VITE_API_BASE_URL}/api/jd/delete/${jdId}`
       );
       setMessage(response.data.message);
 
@@ -33,7 +35,7 @@ const JDList = () => {
   const handleDownload = async (jdId, jdName) => {
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/jd/download/${jdId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/jd/download/${jdId}`,
         {
           responseType: "blob", // To handle file download
         }

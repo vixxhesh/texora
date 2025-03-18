@@ -11,7 +11,9 @@ const S3Browser = () => {
     const fetchSubfolders = async () => {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:8080/api/subfolders");
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/api/subfolders`
+        );
         const data = await response.json();
         setSubfolders(data.subfolders || []);
       } catch (error) {
@@ -28,7 +30,9 @@ const S3Browser = () => {
   const fetchFiles = async (folder) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/api/files?subfolder=${folder}`);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/files?subfolder=${folder}`
+      );
       const data = await response.json();
       setFiles(data.files || []);
       setCurrentFolder(folder);
@@ -42,7 +46,11 @@ const S3Browser = () => {
   // Handle file download
   const downloadFile = async (file) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/download?fileKey=Resume/${currentFolder}/${file}`);
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE_URL
+        }/api/download?fileKey=Resume/${currentFolder}/${file}`
+      );
       const data = await response.json();
       if (data.url) {
         window.open(data.url, "_blank");
@@ -54,13 +62,17 @@ const S3Browser = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-center text-white">S3 Browser</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center text-white">
+        S3 Browser
+      </h1>
 
       {/* Show Subfolders */}
       {!currentFolder && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {loading ? (
-            <div className="text-center text-lg text-white">Loading subfolders...</div>
+            <div className="text-center text-lg text-white">
+              Loading subfolders...
+            </div>
           ) : (
             subfolders.map((folder, index) => (
               <div
@@ -88,7 +100,9 @@ const S3Browser = () => {
             Back to Subfolders
           </button>
 
-          <h2 className="text-xl font-bold mb-4 text-center text-white">Files in {currentFolder}</h2>
+          <h2 className="text-xl font-bold mb-4 text-center text-white">
+            Files in {currentFolder}
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {loading ? (
               <div className="text-center text-lg">Loading files...</div>
@@ -98,7 +112,9 @@ const S3Browser = () => {
                   key={index}
                   className="p-4 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow"
                 >
-                  <h2 className="text-sm font-semibold break-words mb-2">{file}</h2>
+                  <h2 className="text-sm font-semibold break-words mb-2">
+                    {file}
+                  </h2>
                   <button
                     onClick={() => downloadFile(file)}
                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"

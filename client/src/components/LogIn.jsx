@@ -1,20 +1,19 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
-
-const Login = ({onLogin}) => {
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
+const Login = ({ onLogin }) => {
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState(localStorage.getItem('role') || '');
+  const [role, setRole] = useState(localStorage.getItemQ("role") || "");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setLoginData((prev) => ({ ...prev, [name]: value }));
-    setError('');
+    setError("");
   };
 
   const togglePasswordVisibility = () => {
@@ -23,47 +22,49 @@ const Login = ({onLogin}) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:8080/app/login', loginData);
-// <<<<<<< pranav2 
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('role', res.data.role);
-      localStorage.setItem('userData', JSON.stringify(res.data.userData)); // Added user data storage
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/app/login`,
+        loginData
+      );
+      // <<<<<<< pranav2
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("role", res.data.role);
+      localStorage.setItem("userData", JSON.stringify(res.data.userData)); // Added user data storage
 
       // Role-based navigation
       switch (res.data.role) {
-        case 'admin':
-          navigate('/admin-dashboard');
+        case "admin":
+          navigate("/admin-dashboard");
           break;
-        case 'user':
-          navigate('/user-dashboard');
+        case "user":
+          navigate("/user-dashboard");
           break;
         default:
-          navigate('/');
-// =======
-//       onLogin(res.data.token, res.data.role); // Trigger state update in App
-//       if (res.data.role === 'admin') {
-//         navigate('/admin-dashboard');
-//       } else {
-//         navigate('/user-dashboard');
-// >>>>>>> main
+          navigate("/");
+        // =======
+        //       onLogin(res.data.token, res.data.role); // Trigger state update in App
+        //       if (res.data.role === 'admin') {
+        //         navigate('/admin-dashboard');
+        //       } else {
+        //         navigate('/user-dashboard');
+        // >>>>>>> main
       }
 
       // Refresh the page after login
       window.location.reload();
-      
     } catch (error) {
-      console.error('Login error:', error);
-      setError('Invalid credentials. Please try again.');
+      console.error("Login error:", error);
+      setError("Invalid credentials. Please try again.");
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8 bg-gray-800 p-8 rounded-xl">
         <div>
           <h2 className="text-3xl font-bold text-white text-center">Login</h2>
         </div>
-        
+
         {error && (
           <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded relative flex items-center">
             <AlertCircle className="w-5 h-5 mr-2" />
@@ -101,7 +102,7 @@ const Login = ({onLogin}) => {
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   required
                   className="block w-full pl-10 pr-10 py-2 border border-gray-700 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -113,7 +114,11 @@ const Login = ({onLogin}) => {
                   onClick={togglePasswordVisibility}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300 focus:outline-none"
                 >
-                  {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                  {showPassword ? (
+                    <Eye className="h-5 w-5" />
+                  ) : (
+                    <EyeOff className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -129,7 +134,7 @@ const Login = ({onLogin}) => {
 
         <div className="text-center">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="text-blue-600 hover:text-blue-500 text-sm font-medium"
           >
             Back to Home

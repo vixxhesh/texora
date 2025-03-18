@@ -22,7 +22,7 @@ const UploadIntVid = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/interview-videos/upload",
+        `${import.meta.env.VITE_API_BASE_URL}/api/interview-videos/upload`,
         formData,
         {
           headers: {

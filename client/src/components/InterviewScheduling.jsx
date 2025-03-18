@@ -52,7 +52,10 @@ const ScheduleMeetingForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:8080/api/zoom/create-meeting", formData);
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/zoom/create-meeting`,
+        formData
+      );
       alert(`Meeting created! Join URL: ${response.data.meetingLink}`);
     } catch (error) {
       console.error("Error scheduling meeting:", error);
@@ -76,24 +79,25 @@ const ScheduleMeetingForm = () => {
                 gap: 2, // Adds spacing between all child elements
               }}
             >
-
-                <TextField 
-                    fullWidth
-                    label="Email (comma-separated)"
-                    name="emails"
-                    value={formData.emails.join(", ")}
-                    onChange={(e) => {
-                        const emails = e.target.value.split(",").map((email) => email.trim());
-                        setFormData({ ...formData, emails })
-                    }}
-                    required
-                    InputProps={{
-                        style: { color: "#ffffff" }, // Text color
-                      }}
-                      InputLabelProps={{
-                        style: { color: "#cccccc" }, // Label color
-                      }}
-                />
+              <TextField
+                fullWidth
+                label="Email (comma-separated)"
+                name="emails"
+                value={formData.emails.join(", ")}
+                onChange={(e) => {
+                  const emails = e.target.value
+                    .split(",")
+                    .map((email) => email.trim());
+                  setFormData({ ...formData, emails });
+                }}
+                required
+                InputProps={{
+                  style: { color: "#ffffff" }, // Text color
+                }}
+                InputLabelProps={{
+                  style: { color: "#cccccc" }, // Label color
+                }}
+              />
               <TextField
                 //   className="text-gray-300"
                 label="Meeting Topic"
@@ -102,11 +106,11 @@ const ScheduleMeetingForm = () => {
                 onChange={handleChange}
                 fullWidth
                 InputProps={{
-                    style: { color: "#ffffff" }, // Text color
-                  }}
-                  InputLabelProps={{
-                    style: { color: "#cccccc" }, // Label color
-                  }}
+                  style: { color: "#ffffff" }, // Text color
+                }}
+                InputLabelProps={{
+                  style: { color: "#cccccc" }, // Label color
+                }}
               />
               <TextField
                 label="Agenda"
@@ -117,11 +121,11 @@ const ScheduleMeetingForm = () => {
                 multiline
                 rows={4}
                 InputProps={{
-                    style: { color: "#ffffff" }, // Text color
-                  }}
-                  InputLabelProps={{
-                    style: { color: "#cccccc" }, // Label color
-                  }}
+                  style: { color: "#ffffff" }, // Text color
+                }}
+                InputLabelProps={{
+                  style: { color: "#cccccc" }, // Label color
+                }}
               />
               <TextField
                 label="Start Time"
@@ -131,12 +135,12 @@ const ScheduleMeetingForm = () => {
                 type="datetime-local"
                 fullWidth
                 InputProps={{
-                    style: { color: "#ffffff" }, // Text color
-                  }}
-                  InputLabelProps={{
-                    style: { color: "#cccccc" }, // Label color
-                    shrink: true,
-                  }}
+                  style: { color: "#ffffff" }, // Text color
+                }}
+                InputLabelProps={{
+                  style: { color: "#cccccc" }, // Label color
+                  shrink: true,
+                }}
               />
               <TextField
                 label="Duration (Minutes)"
@@ -146,11 +150,11 @@ const ScheduleMeetingForm = () => {
                 type="number"
                 fullWidth
                 InputProps={{
-                    style: { color: "#ffffff" }, // Text color
-                  }}
-                  InputLabelProps={{
-                    style: { color: "#cccccc" }, // Label color
-                  }}
+                  style: { color: "#ffffff" }, // Text color
+                }}
+                InputLabelProps={{
+                  style: { color: "#cccccc" }, // Label color
+                }}
               />
               <TextField
                 label="Password"
@@ -160,7 +164,7 @@ const ScheduleMeetingForm = () => {
                 fullWidth
                 type={showPassword ? "text" : "password"} // Toggle between "text" and "password"
                 InputProps={{
-                    style: { color: "#ffffff" }, // Text color
+                  style: { color: "#ffffff" }, // Text color
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton onClick={togglePasswordVisibility} edge="end">
@@ -169,10 +173,10 @@ const ScheduleMeetingForm = () => {
                     </InputAdornment>
                   ),
                 }}
-                  InputLabelProps={{
-                    style: { color: "#cccccc" }, // Label color
-                    shrink: true,
-                  }}
+                InputLabelProps={{
+                  style: { color: "#cccccc" }, // Label color
+                  shrink: true,
+                }}
               />
               <FormControlLabel
                 control={
@@ -181,16 +185,16 @@ const ScheduleMeetingForm = () => {
                     onChange={handleChange}
                     name="waiting_room"
                     sx={{
-                        color: "#cccccc",
-                        "&.Mui-checked": {
-                          color: "#4caf50", // Checkbox checked color
-                        },
-                      }}
+                      color: "#cccccc",
+                      "&.Mui-checked": {
+                        color: "#4caf50", // Checkbox checked color
+                      },
+                    }}
                   />
                 }
                 label={
-                    <span style={{ color: "#cccccc" }}>Enable Waiting Room</span>
-                  }
+                  <span style={{ color: "#cccccc" }}>Enable Waiting Room</span>
+                }
               />
               <FormControlLabel
                 control={
@@ -199,16 +203,18 @@ const ScheduleMeetingForm = () => {
                     onChange={handleChange}
                     name="join_before_host"
                     sx={{
-                        color: "#cccccc",
-                        "&.Mui-checked": {
-                          color: "#4caf50", // Checkbox checked color
-                        },
-                      }}
+                      color: "#cccccc",
+                      "&.Mui-checked": {
+                        color: "#4caf50", // Checkbox checked color
+                      },
+                    }}
                   />
                 }
                 label={
-                    <span style={{ color: "#cccccc" }}>Allow Join Before Host</span>
-                  }
+                  <span style={{ color: "#cccccc" }}>
+                    Allow Join Before Host
+                  </span>
+                }
               />
               <Button type="submit" variant="contained" color="primary">
                 Schedule Meeting

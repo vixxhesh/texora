@@ -26,7 +26,7 @@ const JDUpload = ({ onUploadSuccess }) => {
     try {
       // Send a POST request to upload the file
       const response = await axios.post(
-        "http://localhost:8080/api/jd/upload",
+        `${import.meta.env.VITE_API_BASE_URL}/api/jd/upload`,
         formData,
         {
           headers: {
