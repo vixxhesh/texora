@@ -13,6 +13,7 @@ const bodyParser = require("body-parser");
 const jdRoute = require("./router/jdRoute");
 const meetingRoutes = require("./router/meetingRoutes");
 const interviewVideoRoutes = require("./router/interviewVideos");
+const audioRoutes = require("./router/audioRoutes");
 const { connectDB } = require("./utils/db"); // Import connectDB function
 
 const app = express();
@@ -30,6 +31,12 @@ app.use(
     credentials: true,
   })
 );
+// app.use(
+//   cors({
+//     origin: "*",
+//     credentials: true,
+//   })
+// );
 // Connect to MongoDB and start the server
 const startServer = async () => {
   await connectDB(); // Ensure connection is established
@@ -44,6 +51,7 @@ const startServer = async () => {
   // app.use("/api/jd", jdRoute);
   app.use("/api/zoom", meetingRoutes);
   app.use("/api/interview-videos", interviewVideoRoutes);
+  app.use("/api/audio", audioRoutes);
 
   app.get("*", (req, res) => {
     res.sendFile(path.join(buildpath, "index.html"));

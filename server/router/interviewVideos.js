@@ -5,6 +5,7 @@ const {
   listVideos,
   downloadVideo,
   deleteVideo,
+  convertToMp3,
 } = require("../controllers/interviewVideoController");
 const router = express.Router();
 
@@ -45,5 +46,7 @@ router.post(
 router.get("/", listVideos);
 router.get("/download", downloadVideo); // Using query parameters
 router.delete("/delete", deleteVideo); // Using query parameters
+
+router.post("/convert-to-mp3", convertToMp3);
 
 module.exports = router;

@@ -59,7 +59,6 @@ const Layout = ({ children }) => {
         ];
       case "user":
         return [
-          
           {
             title: "Dashboard",
             path: "/user-dashboard",
@@ -88,6 +87,11 @@ const Layout = ({ children }) => {
           {
             title: "Upload Interview",
             path: "/upload-video",
+            icon: CheckSquare,
+          },
+          {
+            title: "List Mp3",
+            path: "/list-audios",
             icon: CheckSquare,
           },
         ];

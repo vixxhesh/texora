@@ -6,6 +6,7 @@ const ListIntVid = () => {
   const [videos, setVideos] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [converting, setConverting] = useState({});
 
   // Fetch videos from the API
   const fetchVideos = async () => {
@@ -25,39 +26,39 @@ const ListIntVid = () => {
   };
 
   // Handle video deletion
-  // Handle video deletion
   const handleDelete = async (key) => {
     try {
       const videoKey = key.endsWith(".mp4") ? key : `${key}.mp4`;
       await axios.delete(
         `${
           import.meta.env.VITE_API_BASE_URL
-        }/api/interview-videos/delete?filekey=${videoKey}`
+        }/api/interview-videos/delete?key=${videoKey}`
       );
-      alert("Video deleted successfully.");
+      setMessage("Video deleted successfully.");
+      fetchVideos(); // Refresh the list
     } catch (error) {
       console.error("Delete error:", error);
       const errorMessage =
         error.response?.data?.message ||
         "An error occurred while deleting the video.";
-      alert(errorMessage);
+      setMessage(errorMessage);
     }
   };
 
   // Handle video download
-  const handleDownload = async (filename) => {
+  const handleDownload = async (key) => {
     try {
-      const videoKey = filename.endsWith(".mp4") ? filename : `${filename}.mp4`;
+      const videoKey = key.endsWith(".mp4") ? key : `${key}.mp4`;
       const response = await axios.get(
         `${
           import.meta.env.VITE_API_BASE_URL
-        }/api/interview-videos/download/${videoKey}`,
+        }/api/interview-videos/download?key=${videoKey}`,
         { responseType: "blob" }
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", filename); // Specify file name
+      link.setAttribute("download", videoKey.split("/").pop()); // Set file name
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -66,7 +67,27 @@ const ListIntVid = () => {
       const errorMessage =
         error.response?.data?.message ||
         "An error occurred while downloading the video.";
-      alert(errorMessage);
+      setMessage(errorMessage);
+    }
+  };
+
+  // Handle video conversion to MP3
+  const handleConvertToMp3 = async (key) => {
+    try {
+      setConverting({ ...converting, [key]: true });
+      const response = await axios.post(
+        `http://localhost:8080/api/interview-videos/convert-to-mp3`,
+        { key }
+      );
+      setMessage("Video successfully converted to MP3.");
+    } catch (error) {
+      console.error("Conversion error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        "An error occurred while converting the video to MP3.";
+      setMessage(errorMessage);
+    } finally {
+      setConverting({ ...converting, [key]: false });
     }
   };
 
@@ -83,15 +104,16 @@ const ListIntVid = () => {
           </h2>
 
           {message && (
-            <p
-              className={`mb-4 text-sm font-medium ${
-                message.toLowerCase().includes("failed")
-                  ? "text-red-500"
-                  : "text-green-500"
+            <div
+              className={`mb-4 p-3 rounded-md ${
+                message.toLowerCase().includes("failed") ||
+                message.toLowerCase().includes("error")
+                  ? "bg-red-900 bg-opacity-50 text-red-200"
+                  : "bg-green-900 bg-opacity-50 text-green-200"
               }`}
             >
-              {message}
-            </p>
+              <p className="text-sm font-medium">{message}</p>
+            </div>
           )}
 
           {loading ? (
@@ -105,32 +127,34 @@ const ListIntVid = () => {
                   key={video.key}
                   className="bg-gray-800 p-6 rounded-lg shadow-md flex flex-col justify-between"
                 >
-                  <p className="text-lg font-medium text-white mb-4">
-                    <strong>Name:</strong> {video.name}
-                    <strong> Key:</strong> {video.key}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    <strong>Last Modified:</strong>{" "}
-                    {new Date(video.lastModified).toLocaleDateString()}
-                  </p>
-                  <p className="text-sm text-gray-400 mb-4">
-                    <strong>Size:</strong>{" "}
-                    {(video.size / (1024 * 1024)).toFixed(2)} MB
-                  </p>
-                  <div className="flex gap-4">
+                  <div>
+                    <p className="text-lg font-medium text-white mb-2">
+                      {video.name}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      <strong>Last Modified:</strong>{" "}
+                      {new Date(video.lastModified).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-gray-400 mb-4">
+                      <strong>Size:</strong>{" "}
+                      {(video.size / (1024 * 1024)).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     <button
-                      onClick={() => handleDownload(video.key, video.name)}
+                      onClick={() => handleDownload(video.key)}
                       className="py-2 px-4 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                       Download
                     </button>
                     <button
-                      onClick={() =>
-                        alert("Convert to MP3 functionality coming soon!")
-                      }
+                      onClick={() => handleConvertToMp3(video.key)}
                       className="py-2 px-4 bg-green-500 text-white rounded-md shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      disabled={converting[video.key]}
                     >
-                      Convert to MP3
+                      {converting[video.key]
+                        ? "Converting..."
+                        : "Convert to MP3"}
                     </button>
                     <button
                       onClick={() => handleDelete(video.key)}

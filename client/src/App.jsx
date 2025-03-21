@@ -10,6 +10,7 @@ import InterviewScheduling from "./components/InterviewScheduling";
 import AssignedTasks from "./components/AssignedTasks";
 import JDUpload from "./components/JDUpload";
 import JDList from "./components/JDList";
+import ListAudio from "./components/ListAudio";
 
 import UploadFile from "./components/UploadForm";
 import UploadIntVid from "./components/UploadIntVid";
@@ -162,6 +163,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["admin", "user"]}>
                 <ListIntVid />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/list-audios"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "user"]}>
+                <ListAudio />
               </ProtectedRoute>
             }
           />

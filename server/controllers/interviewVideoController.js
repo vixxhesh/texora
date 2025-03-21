@@ -173,3 +173,24 @@ exports.deleteVideo = async (req, res) => {
       .json({ message: "Failed to delete video. Please try again later." });
   }
 };
+
+exports.convertToMp3 = async (req, res) => {
+  const { key } = req.body;
+
+  if (!key) {
+    return res.status(400).json({ message: "Video key is required." });
+  }
+
+  try {
+    // Make an internal call to the audio controller's convertVideoToMp3 function
+    const audioController = require("./audioController");
+    req.body.videoKey = key;
+    await audioController.convertVideoToMp3(req, res);
+  } catch (error) {
+    console.error("MP3 Conversion Error:", error);
+    res.status(500).json({
+      message: "Failed to convert video to MP3.",
+      error: error.message,
+    });
+  }
+};
